@@ -4,11 +4,14 @@ require 'sqlite3'
 require "pp"
 require "net/http"
 require "json"
+require 'inifile'
 
-### XXX - Setup ###
-key = ""
-database = ""
-### ----------- ###
+
+bin_path = File.expand_path(File.dirname(__FILE__))
+inifile = IniFile.load("#{bin_path}/../conf/SL-Distruby.ini")
+key = inifile["SL_API_key"]
+database_name = inifile["database_file"]
+database = "#{bin_path}/../db/#{database_name}"
 
     
 db = SQLite3::Database.new database
