@@ -9,11 +9,12 @@ require 'inifile'
 
 bin_path = File.expand_path(File.dirname(__FILE__))
 inifile = IniFile.load("#{bin_path}/../conf/SL-Distruby.ini")
-key = inifile["SL_API_key"]
-database_name = inifile["database_file"]
+section = inifile['SL-Distruby']
+pp inifile
+key = section["SL_API_key"]
+database_name = section["database_name"]
 database = "#{bin_path}/../db/#{database_name}"
 
-    
 db = SQLite3::Database.new database
 db = SQLite3::Database.open database
 db.execute "CREATE TABLE IF NOT EXISTS Dev(Id INTEGER PRIMARY KEY,DevCaseGid NUMBER, DevMessageVersionNumber NUMBER )"
