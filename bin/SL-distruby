@@ -29,7 +29,7 @@ if response.code == "200"
         _DevCaseGid = nil
         new_DevMessageVersionNumber = nil
         _DevCaseGid = entry["DevCaseGid"]
-        _Scope = entry["Scope"]
+        _Header = entry["Header"]
         _Details = entry["Details"]
         new_DevMessageVersionNumber = entry["DevMessageVersionNumber"]
         _DevMessageVersionNumber = db.get_first_value "SELECT DevMessageVersionNumber FROM Dev WHERE DevCaseGid = :_DevCaseGid  ORDER BY DevMessageVersionNumber DESC LIMIT 1", _DevCaseGid
@@ -47,7 +47,7 @@ if response.code == "200"
             uri = URI('https://api.prowlapp.com/publicapi/add')
 
             until push_retries < 0
-                prowl_response = Net::HTTP.post_form(uri, 'apikey' => prowl_key, 'application' => 'SL-Distruby', 'event' => _Scope, 'description' => _Details, 'priority' => '-1')
+                prowl_response = Net::HTTP.post_form(uri, 'apikey' => prowl_key, 'application' => 'SL-Distruby', 'event' => _Header, 'description' => _Details, 'priority' => '-1')
                 if prowl_response.code == "200"
                    break
                 else
