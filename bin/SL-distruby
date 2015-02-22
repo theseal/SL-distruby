@@ -4,41 +4,62 @@ require 'sqlite3'
 require "pp"
 require "net/http"
 require "json"
+require 'inifile'
 
-### XXX - Setup ###
-key = ""
-database = ""
-### ----------- ###
 
-    
+bin_path = File.expand_path(File.dirname(__FILE__))
+inifile = IniFile.load("#{bin_path}/../conf/SL-Distruby.ini")
+section = inifile['SL-Distruby']
+key = section["SL_API_key"]
+database_name = section["database_name"]
+database = "#{bin_path}/../db/#{database_name}"
+prowl_api = inifile['Prowl']
+prowl_key = prowl_api['key']
+
 db = SQLite3::Database.new database
 db = SQLite3::Database.open database
 db.execute "CREATE TABLE IF NOT EXISTS Dev(Id INTEGER PRIMARY KEY,DevCaseGid NUMBER, DevMessageVersionNumber NUMBER )"
 
-uri = URI("https://api.sl.se/api2/deviationsrawdata.json?key=#{key}&lineNumber=10")
+uri = URI("https://api.sl.se/api2/deviationsrawdata.json?key=#{key}")
 response = Net::HTTP.get_response(uri)
 
-_DevCaseGid = nil
-new_DevMessageVersionNumber = nil
 if response.code == "200"
     result = JSON.parse(response.body)
     result["ResponseData"].each do |entry|
+        _DevCaseGid = nil
+        new_DevMessageVersionNumber = nil
         _DevCaseGid = entry["DevCaseGid"]
+        _Scope = entry["Scope"]
+        _Details = entry["Details"]
         new_DevMessageVersionNumber = entry["DevMessageVersionNumber"]
+        _DevMessageVersionNumber = db.get_first_value "SELECT DevMessageVersionNumber FROM Dev WHERE DevCaseGid = :_DevCaseGid  ORDER BY DevMessageVersionNumber DESC LIMIT 1", _DevCaseGid
+        if _DevMessageVersionNumber.nil?
+            _DevMessageVersionNumber = 0
+        end
+        p _DevMessageVersionNumber
+
+        # Handle newer data then the data in the database.
+        if _DevMessageVersionNumber < new_DevMessageVersionNumber
+            db.execute "INSERT INTO Dev(DevCaseGid,DevMessageVersionNumber) VALUES (?,?)", _DevCaseGid,new_DevMessageVersionNumber
+
+            # Push to client, 5 tries.
+            push_retries = 5
+            uri = URI('https://api.prowlapp.com/publicapi/add')
+
+            until push_retries < 0
+                prowl_response = Net::HTTP.post_form(uri, 'apikey' => prowl_key, 'application' => 'SL-Distruby', 'event' => _Scope, 'description' => _Details, 'priority' => '-1')
+                if prowl_response.code == "200"
+                   break
+                else
+                    push_retries -= 1
+                end
+            end
+
+        end
     end
 else 
     puts "ERROR"
-    exit
 end
 
-_DevMessageVersionNumber = db.get_first_value "SELECT DevMessageVersionNumber FROM Dev WHERE DevCaseGid = :_DevCaseGid  ORDER BY DevMessageVersionNumber DESC LIMIT 1", _DevCaseGid
-if _DevMessageVersionNumber.nil?
-    _DevMessageVersionNumber = 0
-end
-p _DevMessageVersionNumber
-
-if _DevMessageVersionNumber < new_DevMessageVersionNumber
-db.execute "INSERT INTO Dev(DevCaseGid,DevMessageVersionNumber) VALUES (?,?)", _DevCaseGid,new_DevMessageVersionNumber
-end
 
 db.close if db
