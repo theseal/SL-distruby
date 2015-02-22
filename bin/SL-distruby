@@ -38,9 +38,11 @@ if response.code == "200"
         end
         p _DevMessageVersionNumber
 
+        # Handle newer data then the data in the database.
         if _DevMessageVersionNumber < new_DevMessageVersionNumber
             db.execute "INSERT INTO Dev(DevCaseGid,DevMessageVersionNumber) VALUES (?,?)", _DevCaseGid,new_DevMessageVersionNumber
 
+            # Push to client, 5 tries.
             push_retries = 5
             uri = URI('https://api.prowlapp.com/publicapi/add')
 
