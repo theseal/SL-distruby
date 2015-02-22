@@ -18,7 +18,7 @@ prowl_key = prowl_api['key']
 
 db = SQLite3::Database.new database
 db = SQLite3::Database.open database
-db.execute "CREATE TABLE IF NOT EXISTS Dev(Id INTEGER PRIMARY KEY,DevCaseGid NUMBER, DevMessageVersionNumber NUMBER )"
+db.execute "CREATE TABLE IF NOT EXISTS Dev(Id INTEGER PRIMARY KEY,DevCaseGid NUMBER, DevMessageVersionNumber NUMBER, LineNumber NUMBER)"
 
 uri = URI("https://api.sl.se/api2/deviationsrawdata.json?key=#{key}")
 response = Net::HTTP.get_response(uri)
@@ -31,8 +31,9 @@ if response.code == "200"
         _DevCaseGid = entry["DevCaseGid"]
         _Header = entry["Header"]
         _Details = entry["Details"]
+        _LineNumber = entry["LineNumber"].to_i
         new_DevMessageVersionNumber = entry["DevMessageVersionNumber"]
-        _DevMessageVersionNumber = db.get_first_value "SELECT DevMessageVersionNumber FROM Dev WHERE DevCaseGid = :_DevCaseGid  ORDER BY DevMessageVersionNumber DESC LIMIT 1", _DevCaseGid
+        _DevMessageVersionNumber = db.get_first_value "SELECT DevMessageVersionNumber FROM Dev WHERE DevCaseGid = :_DevCaseGid and LineNumber = :_LineNumber ORDER BY DevMessageVersionNumber DESC LIMIT 1", _DevCaseGid,_LineNumber
         if _DevMessageVersionNumber.nil?
             _DevMessageVersionNumber = 0
         end
@@ -40,7 +41,7 @@ if response.code == "200"
 
         # Handle newer data then the data in the database.
         if _DevMessageVersionNumber < new_DevMessageVersionNumber
-            db.execute "INSERT INTO Dev(DevCaseGid,DevMessageVersionNumber) VALUES (?,?)", _DevCaseGid,new_DevMessageVersionNumber
+            db.execute "INSERT INTO Dev(DevCaseGid,DevMessageVersionNumber,LineNumber) VALUES (?,?,?)", _DevCaseGid,new_DevMessageVersionNumber, _LineNumber
 
             # Push to client, 5 tries.
             push_retries = 5
