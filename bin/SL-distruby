@@ -10,7 +10,6 @@ require 'inifile'
 bin_path = File.expand_path(File.dirname(__FILE__))
 inifile = IniFile.load("#{bin_path}/../conf/SL-Distruby.ini")
 section = inifile['SL-Distruby']
-pp inifile
 key = section["SL_API_key"]
 database_name = section["database_name"]
 database = "#{bin_path}/../db/#{database_name}"
