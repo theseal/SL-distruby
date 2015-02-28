@@ -6,6 +6,21 @@ require "net/http"
 require "json"
 require 'inifile'
 
+def prowl (prowl_key,_Header,_Details)
+    #Push to client, 5 tries.
+    push_retries = 5
+    uri = URI('https://api.prowlapp.com/publicapi/add')
+    until push_retries < 0
+        prowl_response = Net::HTTP.post_form(uri, 'apikey' => prowl_key, 'application' => 'SL-Distruby', 'event' => _Header, 'description' => _Details, 'priority' => '-1')
+        pp prowl_response
+        if prowl_response.code == "200"
+            break
+        else
+            push_retries -= 1
+        end
+    end
+end
+
 
 bin_path = File.expand_path(File.dirname(__FILE__))
 inifile = IniFile.load("#{bin_path}/../conf/SL-Distruby.ini")
@@ -37,30 +52,31 @@ if response.code == "200"
         if _DevMessageVersionNumber.nil?
             _DevMessageVersionNumber = 0
         end
-        p _DevMessageVersionNumber
 
         # Handle newer data then the data in the database.
         if _DevMessageVersionNumber < new_DevMessageVersionNumber
             db.execute "INSERT INTO Dev(DevCaseGid,DevMessageVersionNumber,LineNumber) VALUES (?,?,?)", _DevCaseGid,new_DevMessageVersionNumber, _LineNumber
 
-            # Push to client, 5 tries.
-            push_retries = 5
-            uri = URI('https://api.prowlapp.com/publicapi/add')
+            # XXX
+            #select users.uid,name,push_service,push_api_key FROM users,notifications WHERE users.uid = notifications.uid and line = 10; 
+            stm = db.prepare "SELECT users.uid,name,push_service,push_api_key FROM users,notifications WHERE users.uid = notifications.uid and line = :_LineNumber"
+            rs = stm.execute _LineNumber
+            db.results_as_hash = true
 
-            until push_retries < 0
-                prowl_response = Net::HTTP.post_form(uri, 'apikey' => prowl_key, 'application' => 'SL-Distruby', 'event' => _Header, 'description' => _Details, 'priority' => '-1')
-                if prowl_response.code == "200"
-                   break
+            rs.each do |row|
+                puts "Trying to push \"#{_Header}\" to #{row['name']}(#{row['uid']}) through #{row['push_service']}(#{row['push_api_key']})."
+                if row['push_service'] == "prowl"
+                    prowl(row['push_api_key'],_Header,_Details)
                 else
-                    push_retries -= 1
+                    puts "unknown #{row['push_service']}"
                 end
             end
 
+            stm.close
         end
     end
 else 
     puts "ERROR"
 end
-
 
 db.close if db
