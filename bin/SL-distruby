@@ -8,6 +8,7 @@ require 'inifile'
 
 bin_path = File.expand_path(File.dirname(__FILE__))
 lib_path = "#{bin_path}/../lib"
+libexec_path = "#{bin_path}/../lib"
 inifile = IniFile.load("#{bin_path}/../conf/SL-Distruby.ini")
 section = inifile['SL-Distruby']
 key = section["SL_API_key"]
@@ -49,6 +50,8 @@ if response.code == "200"
                 if File.exist?("#{lib_path}/#{row['push_service']}")
                     load "#{lib_path}/#{row['push_service']}"
                     push_method(row['push_api_key'],_Header,_Details)
+                elsif File.exist?("#{libexec_path}/#{row['push_service']}")
+                    system "#{libexec_path}/#{row['push_service']}",push_api_key,_Header,_Details
                 else
                     puts "unknown #{row['push_service']}"
                 end
