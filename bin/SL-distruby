@@ -20,7 +20,7 @@ db = SQLite3::Database.open database
 db.execute "CREATE TABLE IF NOT EXISTS Dev(Id INTEGER PRIMARY KEY,DevCaseGid NUMBER, DevMessageVersionNumber NUMBER, LineNumber NUMBER)"
 db.execute "CREATE TABLE IF NOT EXISTS users(uid INTEGER PRIMARY KEY,name TEXT, push_service TEXT, push_api_key TEXT);"
 db.execute "CREATE TABLE IF NOT EXISTS notifications(uid INTEGER,line TEXT);"
-db.execute "CREATE UNIQUE IF NOT EXISTS INDEX uniq on notifications (uid,line);"
+db.execute "CREATE UNIQUE INDEX IF NOT EXISTS uniq on notifications (uid,line);"
 
 uri = URI("https://api.sl.se/api2/deviationsrawdata.json?key=#{key}")
 response = Net::HTTP.get_response(uri)
