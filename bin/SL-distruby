@@ -55,8 +55,6 @@ if response.code == "200"
         if _DevMessageVersionNumber < new_DevMessageVersionNumber
             db.execute "INSERT INTO Dev(DevCaseGid,DevMessageVersionNumber,LineNumber) VALUES (?,?,?)", _DevCaseGid,new_DevMessageVersionNumber, _LineNumber
 
-            # XXX
-            #select users.uid,name,push_service,push_api_key FROM users,notifications WHERE users.uid = notifications.uid and line = 10; 
             stm = db.prepare "SELECT users.uid,name,push_service,push_api_key FROM users,notifications WHERE users.uid = notifications.uid and line = :_LineNumber"
             rs = stm.execute _LineNumber
             db.results_as_hash = true
