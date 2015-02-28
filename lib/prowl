@@ -1,4 +1,4 @@
-def prowl (prowl_key,_Header,_Details)
+def push_method (prowl_key,_Header,_Details)
     #Push to client, 5 tries.
     push_retries = 5
     uri = URI('https://api.prowlapp.com/publicapi/add')
