@@ -6,22 +6,6 @@ require "net/http"
 require "json"
 require 'inifile'
 
-def prowl (prowl_key,_Header,_Details)
-    #Push to client, 5 tries.
-    push_retries = 5
-    uri = URI('https://api.prowlapp.com/publicapi/add')
-    until push_retries < 0
-        prowl_response = Net::HTTP.post_form(uri, 'apikey' => prowl_key, 'application' => 'SL-Distruby', 'event' => _Header, 'description' => _Details, 'priority' => '-1')
-        pp prowl_response
-        if prowl_response.code == "200"
-            break
-        else
-            push_retries -= 1
-        end
-    end
-end
-
-
 bin_path = File.expand_path(File.dirname(__FILE__))
 inifile = IniFile.load("#{bin_path}/../conf/SL-Distruby.ini")
 section = inifile['SL-Distruby']
@@ -62,6 +46,7 @@ if response.code == "200"
             rs.each do |row|
                 puts "Trying to push \"#{_Header}\" to #{row['name']}(#{row['uid']}) through #{row['push_service']}(#{row['push_api_key']})."
                 if row['push_service'] == "prowl"
+                    load "#{bin_path}/../lib/prowl"
                     prowl(row['push_api_key'],_Header,_Details)
                 else
                     puts "unknown #{row['push_service']}"
