@@ -28,8 +28,6 @@ section = inifile['SL-Distruby']
 key = section["SL_API_key"]
 database_name = section["database_name"]
 database = "#{bin_path}/../db/#{database_name}"
-prowl_api = inifile['Prowl']
-prowl_key = prowl_api['key']
 
 db = SQLite3::Database.new database
 db = SQLite3::Database.open database
