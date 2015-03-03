@@ -1,9 +1,9 @@
 #!/usr/bin/ruby
 
 require 'sqlite3'
-require "pp"
-require "net/http"
-require "json"
+require 'pp'
+require 'net/http'
+require 'json'
 require 'inifile'
 
 bin_path = File.expand_path(File.dirname(__FILE__))
