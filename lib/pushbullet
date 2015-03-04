@@ -1,0 +1,16 @@
+def push_method (pushbullet_key,_Header,_Details)
+    section = @inifile['pushbullet']
+    key = section["pushbullet_API_key"]
+    #Push to client, 5 tries.
+    push_retries = 5
+    uri = URI("https://#{key}:@api.pushbullet.com/v2/pushes")
+    until push_retries < 0
+        prowl_response = Net::HTTP.post_form(uri, 'email' => pushbullet_key , 'type' => 'note', 'title' => _Header, 'body' => _Details)
+        if prowl_response.code == "200"
+            break
+        else
+            push_retries -= 1
+        end
+    end
+    exit
+end
