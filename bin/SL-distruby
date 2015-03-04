@@ -33,6 +33,7 @@ if response.code == "200"
         _DevCaseGid = entry["DevCaseGid"]
         _Header = entry["Header"]
         _Details = entry["Details"]
+        _Details << " Priority #{entry["Priority"]}"
         _LineNumber = entry["LineNumber"].to_i
         new_DevMessageVersionNumber = entry["DevMessageVersionNumber"]
         _DevMessageVersionNumber = db.get_first_value "SELECT DevMessageVersionNumber FROM Dev WHERE DevCaseGid = :_DevCaseGid and LineNumber = :_LineNumber ORDER BY DevMessageVersionNumber DESC LIMIT 1", _DevCaseGid,_LineNumber
