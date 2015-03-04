@@ -4,7 +4,6 @@ def push_method (prowl_key,_Header,_Details)
     uri = URI('https://api.prowlapp.com/publicapi/add')
     until push_retries < 0
         prowl_response = Net::HTTP.post_form(uri, 'apikey' => prowl_key, 'application' => 'SL-Distruby', 'event' => _Header, 'description' => _Details, 'priority' => '-1')
-        pp prowl_response
         if prowl_response.code == "200"
             break
         else
