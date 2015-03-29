@@ -50,7 +50,7 @@ if response.code == "200"
             db.results_as_hash = true
 
             rs.each do |row|
-                if #{entry["Priority"]} > #{row['priority']} 
+                if entry["Priority"] > row['priority'] 
                     puts "Trying to push \"#{_Header}\" to #{row['name']}(#{row['uid']}) through #{row['push_service']}(#{row['push_api_key']})."
                     if File.exist?("#{lib_path}/#{row['push_service']}")
                         load "#{lib_path}/#{row['push_service']}"
