@@ -8,7 +8,7 @@ require 'inifile'
 
 bin_path = File.expand_path(File.dirname(__FILE__))
 lib_path = "#{bin_path}/../lib"
-libexec_path = "#{bin_path}/../lib"
+libexec_path = "#{bin_path}/../libexec"
 @inifile = IniFile.load("#{bin_path}/../conf/SL-distruby.ini")
 section = @inifile['SL-Distruby']
 key = section["SL_API_key"]
