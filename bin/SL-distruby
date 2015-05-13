@@ -116,4 +116,5 @@ if response.code == "200"
 end
 
 db.close if db
+time = Time.new
 puts "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Stopping SL-distruby."
