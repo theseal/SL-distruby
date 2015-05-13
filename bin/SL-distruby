@@ -91,6 +91,22 @@ if response.code == "200"
                 if in_database.nil?
                     puts "Sending #{_TrafficLine} - #{_Message} to user."
                     db.execute "INSERT INTO Traffic(Id,Type) VALUES (?,?)", _EventId,type
+
+                    stm = db.prepare "SELECT users.uid,name,push_service,push_api_key,priority FROM users,notifications WHERE users.uid = notifications.uid and line = :_LineNumber"
+                    rs = stm.execute type
+                    db.results_as_hash = true
+                    rs.each do |row|
+                        puts "Trying to push \"#{_TrafficLine}\" to #{row['name']}(#{row['uid']}) through #{row['push_service']}(#{row['push_api_key']})."
+                        if File.exist?("#{lib_path}/#{row['push_service']}")
+                            load "#{lib_path}/#{row['push_service']}"
+                            push_method(row['push_api_key'],_TrafficLine,_Message)
+                        elsif File.exist?("#{libexec_path}/#{row['push_service']}")
+                            system "#{libexec_path}/#{row['push_service']}",push_api_key,_TrafficLine,_Message
+                        else
+                            puts "unknown #{row['push_service']}"
+                        end
+                    end
+                    stm.close
                 end
             end
         end
