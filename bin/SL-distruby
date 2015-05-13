@@ -83,6 +83,9 @@ if response.code == "200"
             if event["StatusIcon"] != "EventGood"
                 _EventId = event['EventId']
                 _Message = event['Message']
+                if event['EventInfoUrl']
+                    _Message << "\n#{event['EventInfoUrl']}"
+                end
                 _TrafficLine = event['TrafficLine']
             end
         end
