@@ -78,9 +78,12 @@ response = Net::HTTP.get_response(uri)
 if response.code == "200"
     result = JSON.parse(response.body)
     result["ResponseData"]['TrafficTypes'].each do |entry|
+        type = entry['Type']
         entry["Events"].each do |event|
             if event["StatusIcon"] != "EventGood"
-                pp event
+                _EventId = event['EventId']
+                _Message = event['Message']
+                _TrafficLine = event['TrafficLine']
             end
         end
     end
