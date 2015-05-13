@@ -12,6 +12,7 @@ libexec_path = "#{bin_path}/../libexec"
 @inifile = IniFile.load("#{bin_path}/../conf/SL-distruby.ini")
 section = @inifile['SL-Distruby']
 dev_key = section["SL_API_dev_key"]
+trafic_key = section["SL_API_trafic_key"]
 database_name = section["database_name"]
 database = "#{bin_path}/../db/#{database_name}"
 
