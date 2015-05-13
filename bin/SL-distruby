@@ -89,7 +89,6 @@ if response.code == "200"
                 _TrafficLine = event['TrafficLine']
                 in_database = db.get_first_value "SELECT Id FROM Traffic WHERE Id = :_EventId and Type = :type LIMIT 1", _EventId, type
                 if in_database.nil?
-                    puts "Sending #{_TrafficLine} - #{_Message} to user."
                     db.execute "INSERT INTO Traffic(Id,Type) VALUES (?,?)", _EventId,type
 
                     stm = db.prepare "SELECT users.uid,name,push_service,push_api_key,priority FROM users,notifications WHERE users.uid = notifications.uid and line = :_LineNumber"
