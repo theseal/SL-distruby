@@ -79,6 +79,12 @@ if response.code == "200"
     result = JSON.parse(response.body)
     pp result
     exit
+    result["ResponseData"]['TrafficTypes'].each do |entry|
+        entry["Events"].each do |event|
+            if event["StatusIcon"] != "EventGood"
+            end
+        end
+    end
 end
 
 db.close if db
