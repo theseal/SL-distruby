@@ -11,18 +11,19 @@ lib_path = "#{bin_path}/../lib"
 libexec_path = "#{bin_path}/../libexec"
 @inifile = IniFile.load("#{bin_path}/../conf/SL-distruby.ini")
 section = @inifile['SL-Distruby']
-key = section["SL_API_key"]
+dev_key = section["SL_API_dev_key"]
 database_name = section["database_name"]
 database = "#{bin_path}/../db/#{database_name}"
 
 db = SQLite3::Database.new database
 db = SQLite3::Database.open database
 db.execute "CREATE TABLE IF NOT EXISTS Dev(Id INTEGER PRIMARY KEY,DevCaseGid NUMBER, DevMessageVersionNumber NUMBER, LineNumber NUMBER)"
+db.execute "CREATE TABLE IF NOT EXISTS Traffic(Id INTEGER PRIMARY KEY,Type TEXT)"
 db.execute "CREATE TABLE IF NOT EXISTS users(uid INTEGER PRIMARY KEY,name TEXT, push_service TEXT, push_api_key TEXT);"
 db.execute "CREATE TABLE IF NOT EXISTS notifications(uid INTEGER,line TEXT,priority INTEGER);"
 db.execute "CREATE UNIQUE INDEX IF NOT EXISTS uniq on notifications (uid,line);"
 
-uri = URI("https://api.sl.se/api2/deviationsrawdata.json?key=#{key}")
+uri = URI("https://api.sl.se/api2/deviationsrawdata.json?key=#{dev_key}")
 response = Net::HTTP.get_response(uri)
 
 if response.code == "200"
