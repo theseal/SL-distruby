@@ -6,6 +6,9 @@ require 'net/http'
 require 'json'
 require 'inifile'
 
+time = Time.new
+puts "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Starting SL-distruby."
+
 bin_path = File.expand_path(File.dirname(__FILE__))
 lib_path = "#{bin_path}/../lib"
 libexec_path = "#{bin_path}/../libexec"
@@ -113,3 +116,4 @@ if response.code == "200"
 end
 
 db.close if db
+puts "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Stopping SL-distruby."
