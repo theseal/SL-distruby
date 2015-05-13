@@ -72,7 +72,7 @@ else
     puts "ERROR"
 end
 
-uri = URI(https://api.sl.se/api2/trafficsituation.json?#{trafic_key}")
+uri = URI("https://api.sl.se/api2/trafficsituation.json?#{trafic_key}")
 response = Net::HTTP.get_response(uri)
 
 if response.code == "200"
