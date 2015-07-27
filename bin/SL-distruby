@@ -6,23 +6,28 @@ require 'net/http'
 require 'json'
 require 'inifile'
 
+time = Time.new
+puts "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Starting SL-distruby."
+
 bin_path = File.expand_path(File.dirname(__FILE__))
 lib_path = "#{bin_path}/../lib"
 libexec_path = "#{bin_path}/../libexec"
 @inifile = IniFile.load("#{bin_path}/../conf/SL-distruby.ini")
 section = @inifile['SL-Distruby']
-key = section["SL_API_key"]
+dev_key = section["SL_API_dev_key"]
+traffic_key = section["SL_API_traffic_key"]
 database_name = section["database_name"]
 database = "#{bin_path}/../db/#{database_name}"
 
 db = SQLite3::Database.new database
 db = SQLite3::Database.open database
 db.execute "CREATE TABLE IF NOT EXISTS Dev(Id INTEGER PRIMARY KEY,DevCaseGid NUMBER, DevMessageVersionNumber NUMBER, LineNumber NUMBER)"
+db.execute "CREATE TABLE IF NOT EXISTS Traffic(Id INTEGER PRIMARY KEY,Type TEXT)"
 db.execute "CREATE TABLE IF NOT EXISTS users(uid INTEGER PRIMARY KEY,name TEXT, push_service TEXT, push_api_key TEXT);"
 db.execute "CREATE TABLE IF NOT EXISTS notifications(uid INTEGER,line TEXT,priority INTEGER);"
 db.execute "CREATE UNIQUE INDEX IF NOT EXISTS uniq on notifications (uid,line);"
 
-uri = URI("https://api.sl.se/api2/deviationsrawdata.json?key=#{key}")
+uri = URI("https://api.sl.se/api2/deviationsrawdata.json?key=#{dev_key}")
 response = Net::HTTP.get_response(uri)
 
 if response.code == "200"
@@ -70,4 +75,46 @@ else
     puts "ERROR"
 end
 
+uri = URI("https://api.sl.se/api2/trafficsituation.json?key=#{traffic_key}")
+response = Net::HTTP.get_response(uri)
+
+if response.code == "200"
+    result = JSON.parse(response.body)
+    result["ResponseData"]['TrafficTypes'].each do |entry|
+        type = entry['Type']
+        entry["Events"].each do |event|
+            if event["StatusIcon"] != "EventGood"
+                _EventId = event['EventId']
+                _Message = event['Message']
+                if event['EventInfoUrl']
+                    _Message << "\n#{event['EventInfoUrl']}"
+                end
+                _TrafficLine = event['TrafficLine']
+                in_database = db.get_first_value "SELECT Id FROM Traffic WHERE Id = :_EventId and Type = :type LIMIT 1", _EventId, type
+                if in_database.nil?
+                    db.execute "INSERT INTO Traffic(Id,Type) VALUES (?,?)", _EventId,type
+
+                    stm = db.prepare "SELECT users.uid,name,push_service,push_api_key,priority FROM users,notifications WHERE users.uid = notifications.uid and line = :_LineNumber"
+                    rs = stm.execute type
+                    db.results_as_hash = true
+                    rs.each do |row|
+                        puts "Trying to push \"#{_TrafficLine}\" to #{row['name']}(#{row['uid']}) through #{row['push_service']}(#{row['push_api_key']})."
+                        if File.exist?("#{lib_path}/#{row['push_service']}")
+                            load "#{lib_path}/#{row['push_service']}"
+                            push_method(row['push_api_key'],_TrafficLine,_Message)
+                        elsif File.exist?("#{libexec_path}/#{row['push_service']}")
+                            system "#{libexec_path}/#{row['push_service']}",push_api_key,_TrafficLine,_Message
+                        else
+                            puts "unknown #{row['push_service']}"
+                        end
+                    end
+                    stm.close
+                end
+            end
+        end
+    end
+end
+
 db.close if db
+time = Time.new
+puts "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Stopping SL-distruby."
