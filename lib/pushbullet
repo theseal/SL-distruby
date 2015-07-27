@@ -12,5 +12,4 @@ def push_method (pushbullet_key,_Header,_Details)
             push_retries -= 1
         end
     end
-    exit
 end
