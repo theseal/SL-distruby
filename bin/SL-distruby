@@ -31,7 +31,13 @@ uri = URI("https://api.sl.se/api2/deviationsrawdata.json?key=#{dev_key}")
 response = Net::HTTP.get_response(uri)
 
 if response.code == "200"
-    result = JSON.parse(response.body)
+    begin
+        result = JSON.parse(response.body)
+    rescue Exception => e
+        puts "Couldn't parse the JSON, exiting."
+        exit
+    end
+
     result["ResponseData"].each do |entry|
         _DevCaseGid = nil
         new_DevMessageVersionNumber = nil
@@ -79,7 +85,12 @@ uri = URI("https://api.sl.se/api2/trafficsituation.json?key=#{traffic_key}")
 response = Net::HTTP.get_response(uri)
 
 if response.code == "200"
-    result = JSON.parse(response.body)
+    begin
+        result = JSON.parse(response.body)
+    rescue Exception => e
+        puts "Couldn't parse the JSON, exiting."
+        exit
+    end
     result["ResponseData"]['TrafficTypes'].each do |entry|
         type = entry['Type']
         entry["Events"].each do |event|
