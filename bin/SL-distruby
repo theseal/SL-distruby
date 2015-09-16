@@ -27,7 +27,7 @@ db.execute "CREATE UNIQUE INDEX IF NOT EXISTS uniq on notifications (uid,line);"
 
 loop do
     time = Time.new
-    puts "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Starting SL-distruby."
+    puts "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Starting loop - SL-distruby."
     uri = URI("https://api.sl.se/api2/deviationsrawdata.json?key=#{dev_key}")
     response = Net::HTTP.get_response(uri)
 
@@ -128,7 +128,7 @@ loop do
     end
 
     time = Time.new
-    puts "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Stopping SL-distruby."
+    puts "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Completed loop - SL-Distruby"
     sleep 300
 end
 
