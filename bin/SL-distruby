@@ -35,8 +35,9 @@ loop do
         begin
             result = JSON.parse(response.body)
         rescue Exception => e
-            puts "Couldn't parse the JSON, exiting."
-            exit
+            puts "Couldn't parse the JSON. Trying again in 5 min."
+            sleep 300
+            next
         end
 
         result["ResponseData"].each do |entry|
@@ -89,8 +90,9 @@ loop do
         begin
             result = JSON.parse(response.body)
         rescue Exception => e
-            puts "Couldn't parse the JSON, exiting."
-            exit
+            puts "Couldn't parse the JSON. Trying again in 5 min."
+            sleep 300
+            next
         end
         result["ResponseData"]['TrafficTypes'].each do |entry|
             type = entry['Type']
