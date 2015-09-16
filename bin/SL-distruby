@@ -6,8 +6,6 @@ require 'net/http'
 require 'json'
 require 'inifile'
 
-time = Time.new
-puts "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Starting SL-distruby."
 
 bin_path = File.expand_path(File.dirname(__FILE__))
 lib_path = "#{bin_path}/../lib"
@@ -28,6 +26,8 @@ db.execute "CREATE TABLE IF NOT EXISTS notifications(uid INTEGER,line TEXT,prior
 db.execute "CREATE UNIQUE INDEX IF NOT EXISTS uniq on notifications (uid,line);"
 
 loop do
+    time = Time.new
+    puts "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Starting SL-distruby."
     uri = URI("https://api.sl.se/api2/deviationsrawdata.json?key=#{dev_key}")
     response = Net::HTTP.get_response(uri)
 
