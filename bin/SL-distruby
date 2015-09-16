@@ -28,108 +28,108 @@ db.execute "CREATE TABLE IF NOT EXISTS notifications(uid INTEGER,line TEXT,prior
 db.execute "CREATE UNIQUE INDEX IF NOT EXISTS uniq on notifications (uid,line);"
 
 loop do
-uri = URI("https://api.sl.se/api2/deviationsrawdata.json?key=#{dev_key}")
-response = Net::HTTP.get_response(uri)
+    uri = URI("https://api.sl.se/api2/deviationsrawdata.json?key=#{dev_key}")
+    response = Net::HTTP.get_response(uri)
 
-if response.code == "200"
-    begin
-        result = JSON.parse(response.body)
-    rescue Exception => e
-        puts "Couldn't parse the JSON, exiting."
-        exit
-    end
-
-    result["ResponseData"].each do |entry|
-        _DevCaseGid = nil
-        new_DevMessageVersionNumber = nil
-        _DevCaseGid = entry["DevCaseGid"]
-        _Header = entry["Header"]
-        _Details = entry["Details"]
-        _Details << " Priority #{entry["Priority"]}"
-        _LineNumber = entry["LineNumber"].to_i
-        new_DevMessageVersionNumber = entry["DevMessageVersionNumber"]
-        _DevMessageVersionNumber = db.get_first_value "SELECT DevMessageVersionNumber FROM Dev WHERE DevCaseGid = :_DevCaseGid and LineNumber = :_LineNumber ORDER BY DevMessageVersionNumber DESC LIMIT 1", _DevCaseGid,_LineNumber
-        if _DevMessageVersionNumber.nil?
-            _DevMessageVersionNumber = 0
+    if response.code == "200"
+        begin
+            result = JSON.parse(response.body)
+        rescue Exception => e
+            puts "Couldn't parse the JSON, exiting."
+            exit
         end
 
-        # Handle newer data then the data in the database.
-        if _DevMessageVersionNumber < new_DevMessageVersionNumber
-            db.execute "INSERT INTO Dev(DevCaseGid,DevMessageVersionNumber,LineNumber) VALUES (?,?,?)", _DevCaseGid,new_DevMessageVersionNumber, _LineNumber
-
-            stm = db.prepare "SELECT users.uid,name,push_service,push_api_key,priority FROM users,notifications WHERE users.uid = notifications.uid and line = :_LineNumber"
-            rs = stm.execute _LineNumber
-            db.results_as_hash = true
-
-            rs.each do |row|
-                if entry["Priority"] > row['priority'] 
-                    puts "Trying to push \"#{_Header}\" to #{row['name']}(#{row['uid']}) through #{row['push_service']}(#{row['push_api_key']})."
-                    if File.exist?("#{lib_path}/#{row['push_service']}")
-                        load "#{lib_path}/#{row['push_service']}"
-                        push_method(row['push_api_key'],_Header,_Details)
-                    elsif File.exist?("#{libexec_path}/#{row['push_service']}")
-                        system "#{libexec_path}/#{row['push_service']}",push_api_key,_Header,_Details
-                    else
-                        puts "unknown #{row['push_service']}"
-                    end
-                end
+        result["ResponseData"].each do |entry|
+            _DevCaseGid = nil
+            new_DevMessageVersionNumber = nil
+            _DevCaseGid = entry["DevCaseGid"]
+            _Header = entry["Header"]
+            _Details = entry["Details"]
+            _Details << " Priority #{entry["Priority"]}"
+            _LineNumber = entry["LineNumber"].to_i
+            new_DevMessageVersionNumber = entry["DevMessageVersionNumber"]
+            _DevMessageVersionNumber = db.get_first_value "SELECT DevMessageVersionNumber FROM Dev WHERE DevCaseGid = :_DevCaseGid and LineNumber = :_LineNumber ORDER BY DevMessageVersionNumber DESC LIMIT 1", _DevCaseGid,_LineNumber
+            if _DevMessageVersionNumber.nil?
+                _DevMessageVersionNumber = 0
             end
 
-            stm.close
-        end
-    end
-else 
-    puts "ERROR"
-end
-
-uri = URI("https://api.sl.se/api2/trafficsituation.json?key=#{traffic_key}")
-response = Net::HTTP.get_response(uri)
-
-if response.code == "200"
-    begin
-        result = JSON.parse(response.body)
-    rescue Exception => e
-        puts "Couldn't parse the JSON, exiting."
-        exit
-    end
-    result["ResponseData"]['TrafficTypes'].each do |entry|
-        type = entry['Type']
-        entry["Events"].each do |event|
-            if event["StatusIcon"] != "EventGood"
-                _EventId = event['EventId']
-                _Message = event['Message']
-                if event['EventInfoUrl']
-                    _Message << "\n#{event['EventInfoUrl']}"
-                end
-                _TrafficLine = event['TrafficLine']
-                in_database = db.get_first_value "SELECT Id FROM Traffic WHERE Id = :_EventId and Type = :type LIMIT 1", _EventId, type
-                if in_database.nil?
-                    db.execute "INSERT INTO Traffic(Id,Type) VALUES (?,?)", _EventId,type
-
-                    stm = db.prepare "SELECT users.uid,name,push_service,push_api_key,priority FROM users,notifications WHERE users.uid = notifications.uid and line = :_LineNumber"
-                    rs = stm.execute type
-                    db.results_as_hash = true
-                    rs.each do |row|
-                        puts "Trying to push \"#{_TrafficLine}\" to #{row['name']}(#{row['uid']}) through #{row['push_service']}(#{row['push_api_key']})."
+            # Handle newer data then the data in the database.
+            if _DevMessageVersionNumber < new_DevMessageVersionNumber
+                db.execute "INSERT INTO Dev(DevCaseGid,DevMessageVersionNumber,LineNumber) VALUES (?,?,?)", _DevCaseGid,new_DevMessageVersionNumber, _LineNumber
+    
+                stm = db.prepare "SELECT users.uid,name,push_service,push_api_key,priority FROM users,notifications WHERE users.uid = notifications.uid and line = :_LineNumber"
+                rs = stm.execute _LineNumber
+                db.results_as_hash = true
+    
+                rs.each do |row|
+                    if entry["Priority"] > row['priority'] 
+                        puts "Trying to push \"#{_Header}\" to #{row['name']}(#{row['uid']}) through #{row['push_service']}(#{row['push_api_key']})."
                         if File.exist?("#{lib_path}/#{row['push_service']}")
                             load "#{lib_path}/#{row['push_service']}"
-                            push_method(row['push_api_key'],_TrafficLine,_Message)
+                            push_method(row['push_api_key'],_Header,_Details)
                         elsif File.exist?("#{libexec_path}/#{row['push_service']}")
-                            system "#{libexec_path}/#{row['push_service']}",push_api_key,_TrafficLine,_Message
+                            system "#{libexec_path}/#{row['push_service']}",push_api_key,_Header,_Details
                         else
                             puts "unknown #{row['push_service']}"
                         end
                     end
-                    stm.close
+                end
+
+                stm.close
+            end
+        end
+    else 
+        puts "ERROR"
+    end
+    
+    uri = URI("https://api.sl.se/api2/trafficsituation.json?key=#{traffic_key}")
+    response = Net::HTTP.get_response(uri)
+    
+    if response.code == "200"
+        begin
+            result = JSON.parse(response.body)
+        rescue Exception => e
+            puts "Couldn't parse the JSON, exiting."
+            exit
+        end
+        result["ResponseData"]['TrafficTypes'].each do |entry|
+            type = entry['Type']
+            entry["Events"].each do |event|
+                if event["StatusIcon"] != "EventGood"
+                    _EventId = event['EventId']
+                    _Message = event['Message']
+                    if event['EventInfoUrl']
+                        _Message << "\n#{event['EventInfoUrl']}"
+                    end
+                    _TrafficLine = event['TrafficLine']
+                    in_database = db.get_first_value "SELECT Id FROM Traffic WHERE Id = :_EventId and Type = :type LIMIT 1", _EventId, type
+                    if in_database.nil?
+                        db.execute "INSERT INTO Traffic(Id,Type) VALUES (?,?)", _EventId,type
+
+                        stm = db.prepare "SELECT users.uid,name,push_service,push_api_key,priority FROM users,notifications WHERE users.uid = notifications.uid and line = :_LineNumber"
+                        rs = stm.execute type
+                        db.results_as_hash = true
+                        rs.each do |row|
+                            puts "Trying to push \"#{_TrafficLine}\" to #{row['name']}(#{row['uid']}) through #{row['push_service']}(#{row['push_api_key']})."
+                            if File.exist?("#{lib_path}/#{row['push_service']}")
+                                load "#{lib_path}/#{row['push_service']}"
+                                push_method(row['push_api_key'],_TrafficLine,_Message)
+                            elsif File.exist?("#{libexec_path}/#{row['push_service']}")
+                                system "#{libexec_path}/#{row['push_service']}",push_api_key,_TrafficLine,_Message
+                            else
+                                puts "unknown #{row['push_service']}"
+                            end
+                        end
+                        stm.close
+                    end
                 end
             end
         end
     end
-end
 
-db.close if db
-time = Time.new
-puts "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Stopping SL-distruby."
+    db.close if db
+    time = Time.new
+    puts "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Stopping SL-distruby."
 end
 
 trap('INT') do
