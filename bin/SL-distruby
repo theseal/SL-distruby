@@ -129,3 +129,8 @@ end
 db.close if db
 time = Time.new
 puts "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Stopping SL-distruby."
+
+trap('INT') do
+        puts "Graceful shutdown..."
+        exit 0
+end
