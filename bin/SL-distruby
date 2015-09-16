@@ -27,6 +27,7 @@ db.execute "CREATE TABLE IF NOT EXISTS users(uid INTEGER PRIMARY KEY,name TEXT, 
 db.execute "CREATE TABLE IF NOT EXISTS notifications(uid INTEGER,line TEXT,priority INTEGER);"
 db.execute "CREATE UNIQUE INDEX IF NOT EXISTS uniq on notifications (uid,line);"
 
+loop do
 uri = URI("https://api.sl.se/api2/deviationsrawdata.json?key=#{dev_key}")
 response = Net::HTTP.get_response(uri)
 
@@ -129,6 +130,7 @@ end
 db.close if db
 time = Time.new
 puts "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Stopping SL-distruby."
+end
 
 trap('INT') do
         puts "Graceful shutdown..."
