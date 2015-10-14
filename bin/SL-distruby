@@ -131,8 +131,8 @@ def parse(json)
     begin
         result = JSON.parse(json)
     rescue Exception => e
-        puts "Couldn't parse the JSON, exiting."
-        exit
+        puts "Couldn't parse the JSON. Skipping"
+        next
     end
     return result
 end
