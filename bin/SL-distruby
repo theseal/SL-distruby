@@ -139,3 +139,13 @@ trap('INT') do
         puts "Graceful shutdown..."
         exit 0
 end
+
+def parse(json)
+    begin
+        result = JSON.parse(json)
+    rescue Exception => e
+        puts "Couldn't parse the JSON, exiting."
+        exit
+    end
+    return result
+end
