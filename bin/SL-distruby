@@ -25,7 +25,7 @@ db.execute "CREATE TABLE IF NOT EXISTS users(uid INTEGER PRIMARY KEY,name TEXT, 
 db.execute "CREATE TABLE IF NOT EXISTS notifications(uid INTEGER,line TEXT,priority INTEGER);"
 db.execute "CREATE UNIQUE INDEX IF NOT EXISTS uniq on notifications (uid,line);"
 
-# Methods 
+### Methods - START ### 
 
 def parse(json)
     begin
@@ -40,6 +40,8 @@ end
 def fetch(uri)
     return Net::HTTP.get_response(uri)
 end
+
+### Methods - END ###
 
 loop do
     time = Time.new
