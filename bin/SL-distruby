@@ -32,14 +32,7 @@ loop do
     response = Net::HTTP.get_response(uri)
 
     if response.code == "200"
-        begin
-            result = JSON.parse(response.body)
-        rescue Exception => e
-            puts "Couldn't parse the JSON. Trying again in 5 min."
-            sleep 300
-            next
-        end
-
+        result = parse(response.body)
         result["ResponseData"].each do |entry|
             _DevCaseGid = nil
             new_DevMessageVersionNumber = nil
@@ -87,13 +80,7 @@ loop do
     response = Net::HTTP.get_response(uri)
     
     if response.code == "200"
-        begin
-            result = JSON.parse(response.body)
-        rescue Exception => e
-            puts "Couldn't parse the JSON. Trying again in 5 min."
-            sleep 300
-            next
-        end
+        result = parse(response.body)
         result["ResponseData"]['TrafficTypes'].each do |entry|
             type = entry['Type']
             entry["Events"].each do |event|
