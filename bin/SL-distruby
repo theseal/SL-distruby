@@ -145,4 +145,3 @@ trap('INT') do
         puts "Graceful shutdown..."
         exit 0
 end
-
