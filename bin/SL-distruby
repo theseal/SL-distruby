@@ -30,7 +30,7 @@ loop do
     puts "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Starting loop - SL-distruby."
 
     uri = URI("https://api.sl.se/api2/deviationsrawdata.json?key=#{dev_key}")
-    response = Net::HTTP.get_response(uri)
+    response = fetch(uri)
 
     if response.code == "200"
         result = parse(response.body)
@@ -78,7 +78,7 @@ loop do
     end
     
     uri = URI("https://api.sl.se/api2/trafficsituation.json?key=#{traffic_key}")
-    response = Net::HTTP.get_response(uri)
+    response = fetch(uri)
     
     if response.code == "200"
         result = parse(response.body)
@@ -138,4 +138,8 @@ def parse(json)
         next
     end
     return result
+end
+
+def fetch(uri)
+    return Net::HTTP.get_response(uri)
 end
