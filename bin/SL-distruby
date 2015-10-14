@@ -25,6 +25,22 @@ db.execute "CREATE TABLE IF NOT EXISTS users(uid INTEGER PRIMARY KEY,name TEXT, 
 db.execute "CREATE TABLE IF NOT EXISTS notifications(uid INTEGER,line TEXT,priority INTEGER);"
 db.execute "CREATE UNIQUE INDEX IF NOT EXISTS uniq on notifications (uid,line);"
 
+# Methods 
+
+def parse(json)
+    begin
+        result = JSON.parse(json)
+    rescue Exception => e
+        puts "Couldn't parse the JSON. Skipping"
+        next
+    end
+    return result
+end
+
+def fetch(uri)
+    return Net::HTTP.get_response(uri)
+end
+
 loop do
     time = Time.new
     puts "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Starting loop - SL-distruby."
@@ -128,18 +144,3 @@ trap('INT') do
         exit 0
 end
 
-# Methods
-
-def parse(json)
-    begin
-        result = JSON.parse(json)
-    rescue Exception => e
-        puts "Couldn't parse the JSON. Skipping"
-        next
-    end
-    return result
-end
-
-def fetch(uri)
-    return Net::HTTP.get_response(uri)
-end
