@@ -32,7 +32,7 @@ def parse(json)
         result = JSON.parse(json)
     rescue Exception => e
         puts "Couldn't parse the JSON. Skipping"
-        return 0
+        return nil
     end
     return result
 end
@@ -52,6 +52,9 @@ loop do
 
     if response.code == "200"
         result = parse(response.body)
+        if ! result
+            next
+        end
         result["ResponseData"].each do |entry|
             _DevCaseGid = nil
             new_DevMessageVersionNumber = nil
@@ -100,6 +103,9 @@ loop do
     
     if response.code == "200"
         result = parse(response.body)
+        if ! result
+            next
+        end
         result["ResponseData"]['TrafficTypes'].each do |entry|
             type = entry['Type']
             entry["Events"].each do |event|
