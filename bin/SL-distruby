@@ -32,7 +32,7 @@ def parse(json)
         result = JSON.parse(json)
     rescue Exception => e
         puts "Couldn't parse the JSON. Skipping"
-        next
+        return 0
     end
     return result
 end
