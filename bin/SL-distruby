@@ -38,16 +38,16 @@ def parse(json)
 end
 
 def fetch(uri)
-    $try = 0
-    $max_tries = 5
+    try = 0
+    max_tries = 5
     response = nil
 
-    while $try < $max_tries  do
+    while try < max_tries  do
         response = Net::HTTP.get_response(uri)
         if response.code == "200"
             return response
         end
-        $try +=1
+        try +=1
     end
     puts "All attempts to fetch the json failed, returning nil."
     return response
