@@ -41,6 +41,19 @@ def fetch(uri)
     return Net::HTTP.get_response(uri)
 end
 
+def push(header,name,uid,push_service,push_api_key,payload)
+    begin
+    puts "Trying to push \"#{header}\" to #{name}(#{uid}) through #{push_service}(#{push_api_key})."
+    if File.exist?("#{lib_path}/#{push_service}")
+        load "#{lib_path}/#{push_service]}"
+        push_method(push_api_key,header,payload)
+    elsif File.exist?("#{libexec_path}/#{push_service}")
+        system "#{libexec_path}/#{push_service}",push_api_key,header,payload
+    else
+        puts "unknown #{push_service}"
+    end
+end
+
 ### Methods - END ###
 
 loop do
@@ -60,8 +73,8 @@ loop do
             new_DevMessageVersionNumber = nil
             _DevCaseGid = entry["DevCaseGid"]
             _Header = entry["Header"]
-            _Details = entry["Details"]
-            _Details << " Priority #{entry["Priority"]}"
+            payload = entry["Details"]
+            payload << " Priority #{entry["Priority"]}"
             _LineNumber = entry["LineNumber"].to_i
             new_DevMessageVersionNumber = entry["DevMessageVersionNumber"]
             _DevMessageVersionNumber = db.get_first_value "SELECT DevMessageVersionNumber FROM Dev WHERE DevCaseGid = :_DevCaseGid and LineNumber = :_LineNumber ORDER BY DevMessageVersionNumber DESC LIMIT 1", _DevCaseGid,_LineNumber
@@ -79,15 +92,7 @@ loop do
     
                 rs.each do |row|
                     if entry["Priority"] > row['priority'] 
-                        puts "Trying to push \"#{_Header}\" to #{row['name']}(#{row['uid']}) through #{row['push_service']}(#{row['push_api_key']})."
-                        if File.exist?("#{lib_path}/#{row['push_service']}")
-                            load "#{lib_path}/#{row['push_service']}"
-                            push_method(row['push_api_key'],_Header,_Details)
-                        elsif File.exist?("#{libexec_path}/#{row['push_service']}")
-                            system "#{libexec_path}/#{row['push_service']}",push_api_key,_Header,_Details
-                        else
-                            puts "unknown #{row['push_service']}"
-                        end
+                        push(_Header,row['uid'],row['push_service'],row['push_api_key'],payload)
                     end
                 end
 
@@ -111,9 +116,9 @@ loop do
             entry["Events"].each do |event|
                 if event["StatusIcon"] != "EventGood"
                     _EventId = event['EventId']
-                    _Message = event['Message']
+                    payload = event['Message']
                     if event['EventInfoUrl']
-                        _Message << "\n#{event['EventInfoUrl']}"
+                        payload << "\n#{event['EventInfoUrl']}"
                     end
                     _TrafficLine = event['TrafficLine']
                     in_database = db.get_first_value "SELECT Id FROM Traffic WHERE Id = :_EventId and Type = :type LIMIT 1", _EventId, type
@@ -124,15 +129,7 @@ loop do
                         rs = stm.execute type
                         db.results_as_hash = true
                         rs.each do |row|
-                            puts "Trying to push \"#{_TrafficLine}\" to #{row['name']}(#{row['uid']}) through #{row['push_service']}(#{row['push_api_key']})."
-                            if File.exist?("#{lib_path}/#{row['push_service']}")
-                                load "#{lib_path}/#{row['push_service']}"
-                                push_method(row['push_api_key'],_TrafficLine,_Message)
-                            elsif File.exist?("#{libexec_path}/#{row['push_service']}")
-                                system "#{libexec_path}/#{row['push_service']}",push_api_key,_TrafficLine,_Message
-                            else
-                                puts "unknown #{row['push_service']}"
-                            end
+                            push(_Header,row['uid'],row['push_service'],row['push_api_key'],payload)
                         end
                         stm.close
                     end
