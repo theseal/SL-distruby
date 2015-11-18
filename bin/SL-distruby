@@ -42,10 +42,9 @@ def fetch(uri)
 end
 
 def push(header,name,uid,push_service,push_api_key,payload)
-    begin
     puts "Trying to push \"#{header}\" to #{name}(#{uid}) through #{push_service}(#{push_api_key})."
     if File.exist?("#{lib_path}/#{push_service}")
-        load "#{lib_path}/#{push_service]}"
+        load "#{lib_path}/#{push_service}"
         push_method(push_api_key,header,payload)
     elsif File.exist?("#{libexec_path}/#{push_service}")
         system "#{libexec_path}/#{push_service}",push_api_key,header,payload
