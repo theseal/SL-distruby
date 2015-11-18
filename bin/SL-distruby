@@ -16,6 +16,7 @@ dev_key = section["SL_API_dev_key"]
 traffic_key = section["SL_API_traffic_key"]
 database_name = section["database_name"]
 database = "#{bin_path}/../db/#{database_name}"
+json_path = "#{bin_path}/../broken_json"
 
 db = SQLite3::Database.new database
 db = SQLite3::Database.open database
@@ -31,6 +32,8 @@ def parse(json)
     begin
         result = JSON.parse(json)
     rescue Exception => e
+        time = Time.now.getutc.to_i
+        IO.write("#{json_path}/#{time}.json", "#{json}\n")
         puts "Couldn't parse the JSON. Skipping"
         return nil
     end
