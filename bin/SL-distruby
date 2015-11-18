@@ -42,7 +42,7 @@ def fetch(uri)
     $max_tries = 5
     response = nil
 
-    while $try < $tries  do
+    while $try < $max_tries  do
         response = Net::HTTP.get_response(uri)
         if response.code == "200"
             return response
