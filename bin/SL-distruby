@@ -38,7 +38,19 @@ def parse(json)
 end
 
 def fetch(uri)
-    return Net::HTTP.get_response(uri)
+    $try = 0
+    $max_tries = 5
+    response = nil
+
+    while $try < $tries  do
+        response = Net::HTTP.get_response(uri)
+        if response.code == "200"
+            return response
+        end
+        $try +=1
+    end
+    puts "All attempts to fetch the json failed, returning nil."
+    return response
 end
 
 def push(header,name,uid,push_service,push_api_key,payload)
@@ -62,7 +74,7 @@ loop do
     uri = URI("https://api.sl.se/api2/deviationsrawdata.json?key=#{dev_key}")
     response = fetch(uri)
 
-    if response.code == "200"
+    if response
         result = parse(response.body)
         if ! result
             next
@@ -105,7 +117,7 @@ loop do
     uri = URI("https://api.sl.se/api2/trafficsituation.json?key=#{traffic_key}")
     response = fetch(uri)
     
-    if response.code == "200"
+    if response
         result = parse(response.body)
         if ! result
             next
