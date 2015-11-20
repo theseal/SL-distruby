@@ -143,7 +143,7 @@ loop do
                         rs = stm.execute type
                         db.results_as_hash = true
                         rs.each do |row|
-                            push(_Header,row['uid'],row['push_service'],row['push_api_key'],payload)
+                            push(_TrafficLine,row['uid'],row['push_service'],row['push_api_key'],payload)
                         end
                         stm.close
                     end
