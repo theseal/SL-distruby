@@ -56,7 +56,7 @@ def fetch(uri)
     return response
 end
 
-def push(header,name,uid,push_service,push_api_key,payload)
+def push(header,uid,push_service,push_api_key,payload)
     puts "Trying to push \"#{header}\" to #{name}(#{uid}) through #{push_service}(#{push_api_key})."
     if File.exist?("#{lib_path}/#{push_service}")
         load "#{lib_path}/#{push_service}"
