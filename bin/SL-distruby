@@ -8,15 +8,15 @@ require 'inifile'
 
 
 bin_path = File.expand_path(File.dirname(__FILE__))
-lib_path = "#{bin_path}/../lib"
-libexec_path = "#{bin_path}/../libexec"
+$lib_path = "#{bin_path}/../lib"
+$libexec_path = "#{bin_path}/../libexec"
 @inifile = IniFile.load("#{bin_path}/../conf/SL-distruby.ini")
 section = @inifile['SL-Distruby']
 dev_key = section["SL_API_dev_key"]
 traffic_key = section["SL_API_traffic_key"]
 database_name = section["database_name"]
 database = "#{bin_path}/../db/#{database_name}"
-json_path = "#{bin_path}/../broken_json"
+$json_path = "#{bin_path}/../broken_json"
 
 db = SQLite3::Database.new database
 db = SQLite3::Database.open database
@@ -33,7 +33,7 @@ def parse(json)
         result = JSON.parse(json)
     rescue Exception => e
         time = Time.now.getutc.to_i
-        IO.write("#{json_path}/#{time}.json", "#{json}\n")
+        IO.write("#{$json_path}/#{time}.json", "#{json}\n")
         puts "Couldn't parse the JSON. Skipping"
         return nil
     end
@@ -58,11 +58,11 @@ end
 
 def push(header,uid,push_service,push_api_key,payload)
     puts "Trying to push \"#{header}\" to #{uid} through #{push_service}(#{push_api_key})."
-    if File.exist?("#{lib_path}/#{push_service}")
-        load "#{lib_path}/#{push_service}"
+    if File.exist?("#{$lib_path}/#{push_service}")
+        load "#{$lib_path}/#{push_service}"
         push_method(push_api_key,header,payload)
     elsif File.exist?("#{libexec_path}/#{push_service}")
-        system "#{libexec_path}/#{push_service}",push_api_key,header,payload
+        system "#{$libexec_path}/#{push_service}",push_api_key,header,payload
     else
         puts "unknown #{push_service}"
     end
