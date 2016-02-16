@@ -154,7 +154,12 @@ loop do
 
     time = Time.new
     puts "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Completed loop - SL-Distruby"
-    sleep 300
+    begin
+        sleep 300
+    rescue Interrupt
+        puts "\nQuiting SL-Distruby"
+        exit
+    end
 end
 
 trap('INT') do
