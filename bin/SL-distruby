@@ -6,6 +6,8 @@ require 'net/http'
 require 'json'
 require 'inifile'
 
+require 'syslog/logger'
+@log = Syslog::Logger.new 'SL-distruby'
 
 bin_path = File.expand_path(File.dirname(__FILE__))
 $lib_path = "#{bin_path}/../lib"
@@ -30,6 +32,7 @@ db.execute "CREATE UNIQUE INDEX IF NOT EXISTS uniq on notifications (uid,line);"
 
 def output(message)
     puts message
+    @log.info message
 end
 
 def parse(json)
