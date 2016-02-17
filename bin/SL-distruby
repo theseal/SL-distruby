@@ -44,9 +44,10 @@ db.execute "CREATE UNIQUE INDEX IF NOT EXISTS uniq on notifications (uid,line);"
 ### Methods - START ### 
 
 def output(message)
-    puts message
     if @syslog
         @log.info message
+    else
+        puts message
     end
 end
 
