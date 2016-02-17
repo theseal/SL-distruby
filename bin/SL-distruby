@@ -28,13 +28,17 @@ db.execute "CREATE UNIQUE INDEX IF NOT EXISTS uniq on notifications (uid,line);"
 
 ### Methods - START ### 
 
+def output(message)
+    puts message
+end
+
 def parse(json)
     begin
         result = JSON.parse(json)
     rescue Exception => e
         time = Time.now.getutc.to_i
         IO.write("#{$json_path}/#{time}.json", "#{json}\n")
-        puts "Couldn't parse the JSON. Skipping"
+        output("Couldn't parse the JSON. Skipping")
         return nil
     end
     return result
@@ -52,19 +56,19 @@ def fetch(uri)
         end
         try +=1
     end
-    puts "All attempts to fetch the json failed, returning nil."
+    output("All attempts to fetch the json failed, returning nil.")
     return response
 end
 
 def push(header,uid,push_service,push_api_key,payload)
-    puts "Trying to push \"#{header}\" to #{uid} through #{push_service}(#{push_api_key})."
+    output( "Trying to push \"#{header}\" to #{uid} through #{push_service}(#{push_api_key}).")
     if File.exist?("#{$lib_path}/#{push_service}")
         load "#{$lib_path}/#{push_service}"
         push_method(push_api_key,header,payload)
     elsif File.exist?("#{libexec_path}/#{push_service}")
         system "#{$libexec_path}/#{push_service}",push_api_key,header,payload
     else
-        puts "unknown #{push_service}"
+        output("unknown #{push_service}")
     end
 end
 
@@ -72,7 +76,7 @@ end
 
 loop do
     time = Time.new
-    puts "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Starting loop - SL-distruby."
+    output("#{time.strftime("%Y-%m-%d %H:%M:%S")} - Starting loop - SL-distruby.")
 
     uri = URI("https://api.sl.se/api2/deviationsrawdata.json?key=#{dev_key}")
     response = fetch(uri)
@@ -114,7 +118,7 @@ loop do
             end
         end
     else 
-        puts "ERROR"
+        output("ERROR")
     end
     
     uri = URI("https://api.sl.se/api2/trafficsituation.json?key=#{traffic_key}")
@@ -153,17 +157,17 @@ loop do
     end
 
     time = Time.new
-    puts "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Completed loop - SL-Distruby"
+    output("#{time.strftime("%Y-%m-%d %H:%M:%S")} - Completed loop - SL-Distruby")
     begin
         sleep 300
     rescue Interrupt
-        puts "\nQuiting SL-Distruby"
+        output("\nQuiting SL-Distruby")
         exit
     end
 end
 
 trap('INT') do
         db.close if db
-        puts "Graceful shutdown..."
+        output("Graceful shutdown...")
         exit 0
 end
