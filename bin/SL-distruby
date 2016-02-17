@@ -5,9 +5,7 @@ require 'pp'
 require 'net/http'
 require 'json'
 require 'inifile'
-
 require 'syslog/logger'
-@log = Syslog::Logger.new 'SL-distruby'
 
 bin_path = File.expand_path(File.dirname(__FILE__))
 $lib_path = "#{bin_path}/../lib"
@@ -19,6 +17,7 @@ traffic_key = section["SL_API_traffic_key"]
 database_name = section["database_name"]
 database = "#{bin_path}/../db/#{database_name}"
 $json_path = "#{bin_path}/../broken_json"
+@log = Syslog::Logger.new 'SL-distruby'
 
 db = SQLite3::Database.new database
 db = SQLite3::Database.open database
