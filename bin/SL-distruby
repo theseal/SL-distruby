@@ -13,13 +13,11 @@ opts = GetoptLong.new(
   [ '--syslog', GetoptLong::OPTIONAL_ARGUMENT ]
 )
 
-log = nil
+log = Logger.new(STDOUT)
 opts.each do |opt|
     case opt
         when '--syslog'
             log = Syslog::Logger.new 'SL-distruby'
-        else
-            log = Logger.new(STDOUT)
     end
 end
 
