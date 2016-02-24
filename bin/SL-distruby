@@ -19,7 +19,7 @@ opts.each do |opt|
         when '--syslog'
             log = Syslog::Logger.new 'SL-distruby'
         else
-            log = Logger:new(STDOUT)
+            log = Logger.new(STDOUT)
     end
 end
 
