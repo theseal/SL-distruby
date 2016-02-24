@@ -87,7 +87,7 @@ end
 
 loop do
     time = Time.new
-    log.info("#{time.strftime("%Y-%m-%d %H:%M:%S")} - Starting loop - SL-distruby.")
+    log.info "Starting loop - SL-distruby."
 
     uri = URI("https://api.sl.se/api2/deviationsrawdata.json?key=#{dev_key}")
     response = fetch(uri)
@@ -168,7 +168,7 @@ loop do
     end
 
     time = Time.new
-    log.info "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Completed loop - SL-Distruby"
+    log.info "Completed loop - SL-Distruby"
     begin
         sleep 300
     rescue Interrupt
