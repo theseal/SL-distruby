@@ -7,17 +7,19 @@ require 'json'
 require 'inifile'
 require 'syslog/logger'
 require 'getoptlong'
+require 'logger'
 
 opts = GetoptLong.new(
   [ '--syslog', GetoptLong::OPTIONAL_ARGUMENT ]
 )
 
-@syslog = nil
+log = nil
 opts.each do |opt|
     case opt
         when '--syslog'
-            @syslog = true
-            @log = Syslog::Logger.new 'SL-distruby'
+            log = Syslog::Logger.new 'SL-distruby'
+        else
+            log = Logger:new(STDOUT)
     end
 end
 
@@ -43,21 +45,13 @@ db.execute "CREATE UNIQUE INDEX IF NOT EXISTS uniq on notifications (uid,line);"
 
 ### Methods - START ### 
 
-def output(message)
-    if @syslog
-        @log.info message
-    else
-        puts message
-    end
-end
-
 def parse(json)
     begin
         result = JSON.parse(json)
     rescue Exception => e
         time = Time.now.getutc.to_i
         IO.write("#{$json_path}/#{time}.json", "#{json}\n")
-        output("Couldn't parse the JSON. Skipping")
+        log.error "Couldn't parse the JSON. Skipping"
         return nil
     end
     return result
@@ -75,19 +69,19 @@ def fetch(uri)
         end
         try +=1
     end
-    output("All attempts to fetch the json failed, returning nil.")
+    log.error "All attempts to fetch the json failed, returning nil."
     return response
 end
 
 def push(header,uid,push_service,push_api_key,payload)
-    output( "Trying to push \"#{header}\" to #{uid} through #{push_service}(#{push_api_key}).")
+    log.info "Trying to push \"#{header}\" to #{uid} through #{push_service}(#{push_api_key})."
     if File.exist?("#{$lib_path}/#{push_service}")
         load "#{$lib_path}/#{push_service}"
         push_method(push_api_key,header,payload)
     elsif File.exist?("#{libexec_path}/#{push_service}")
         system "#{$libexec_path}/#{push_service}",push_api_key,header,payload
     else
-        output("unknown #{push_service}")
+        log.error "unknown #{push_service}"
     end
 end
 
@@ -95,7 +89,7 @@ end
 
 loop do
     time = Time.new
-    output("#{time.strftime("%Y-%m-%d %H:%M:%S")} - Starting loop - SL-distruby.")
+    log.info("#{time.strftime("%Y-%m-%d %H:%M:%S")} - Starting loop - SL-distruby.")
 
     uri = URI("https://api.sl.se/api2/deviationsrawdata.json?key=#{dev_key}")
     response = fetch(uri)
@@ -137,7 +131,7 @@ loop do
             end
         end
     else 
-        output("ERROR")
+        log.error "ERROR"
     end
     
     uri = URI("https://api.sl.se/api2/trafficsituation.json?key=#{traffic_key}")
@@ -176,17 +170,17 @@ loop do
     end
 
     time = Time.new
-    output("#{time.strftime("%Y-%m-%d %H:%M:%S")} - Completed loop - SL-Distruby")
+    log.info "#{time.strftime("%Y-%m-%d %H:%M:%S")} - Completed loop - SL-Distruby"
     begin
         sleep 300
     rescue Interrupt
-        output("\nQuiting SL-Distruby")
+        log.info "\nQuiting SL-Distruby"
         exit
     end
 end
 
 trap('INT') do
         db.close if db
-        output("Graceful shutdown...")
+        log.info "Graceful shutdown..."
         exit 0
 end
