@@ -13,11 +13,11 @@ opts = GetoptLong.new(
   [ '--syslog', GetoptLong::OPTIONAL_ARGUMENT ]
 )
 
-log = Logger.new(STDOUT)
+@log = Logger.new(STDOUT)
 opts.each do |opt|
     case opt
         when '--syslog'
-            log = Syslog::Logger.new 'SL-distruby'
+            @log = Syslog::Logger.new 'SL-distruby'
     end
 end
 
@@ -49,7 +49,7 @@ def parse(json)
     rescue Exception => e
         time = Time.now.getutc.to_i
         IO.write("#{$json_path}/#{time}.json", "#{json}\n")
-        log.error "Couldn't parse the JSON. Skipping"
+        @log.error "Couldn't parse the JSON. Skipping"
         return nil
     end
     return result
@@ -67,19 +67,19 @@ def fetch(uri)
         end
         try +=1
     end
-    log.error "All attempts to fetch the json failed, returning nil."
+    @log.error "All attempts to fetch the json failed, returning nil."
     return response
 end
 
 def push(header,uid,push_service,push_api_key,payload)
-    log.info "Trying to push \"#{header}\" to #{uid} through #{push_service}(#{push_api_key})."
+    @log.info "Trying to push \"#{header}\" to #{uid} through #{push_service}(#{push_api_key})."
     if File.exist?("#{$lib_path}/#{push_service}")
         load "#{$lib_path}/#{push_service}"
         push_method(push_api_key,header,payload)
     elsif File.exist?("#{libexec_path}/#{push_service}")
         system "#{$libexec_path}/#{push_service}",push_api_key,header,payload
     else
-        log.error "unknown #{push_service}"
+        @log.error "unknown #{push_service}"
     end
 end
 
@@ -87,7 +87,7 @@ end
 
 loop do
     time = Time.new
-    log.info "Starting loop - SL-distruby."
+    @log.info "Starting loop - SL-distruby."
 
     uri = URI("https://api.sl.se/api2/deviationsrawdata.json?key=#{dev_key}")
     response = fetch(uri)
@@ -129,7 +129,7 @@ loop do
             end
         end
     else 
-        log.error "ERROR"
+        @log.error "ERROR"
     end
     
     uri = URI("https://api.sl.se/api2/trafficsituation.json?key=#{traffic_key}")
@@ -168,17 +168,17 @@ loop do
     end
 
     time = Time.new
-    log.info "Completed loop - SL-Distruby"
+    @log.info "Completed loop - SL-Distruby"
     begin
         sleep 300
     rescue Interrupt
-        log.info "\nQuiting SL-Distruby"
+        @log.info "\nQuiting SL-Distruby"
         exit
     end
 end
 
 trap('INT') do
         db.close if db
-        log.info "Graceful shutdown..."
+        @log.info "Graceful shutdown..."
         exit 0
 end
