@@ -61,9 +61,13 @@ def fetch(uri)
     response = nil
 
     while try < max_tries  do
-        response = Net::HTTP.get_response(uri)
-        if response.code == "200"
-            return response
+        begin
+            response = Net::HTTP.get_response(uri)
+            if response.code == "200"
+                return response
+            end
+        rescue StandardError
+            false
         end
         try +=1
     end
