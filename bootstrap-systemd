@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+
+DIR=$(dirname "$(readlink -f "${0}")")
+
+GEMFILE="${DIR}/Gemfile"
+
+echo "BUNDLE_GEMFILE=${GEMFILE}" > /etc/default/sl-distruby
+
+cat <<EOF > /etc/systemd/system/sl-distruby.service
+[Unit]
+Description=SL-distruby ELOF
+After=network.target
+
+[Service]
+EnvironmentFile=-/etc/default/sl-distruby
+ExecStart=/usr/bin/bundler exec ${DIR}/bin/SL-distruby
+Restart=always
+RestartSec=60s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable sl-distruby.service
+
+echo "To start SL-distruby run \`systemctl start sl-distruby.service\`."
+
